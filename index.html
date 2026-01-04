@@ -3,126 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fast CSV Splitter for UPPCL</title>
+    <title>CSV Splitter for UPPCL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body { font-family: sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; line-height: 1.6; background: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { color: #333; }
-        input, select, button { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; cursor: pointer; font-size: 16px; font-weight: bold; }
-        button:hover { background: #218838; }
-        #status { margin-top: 20px; padding: 10px; border-radius: 5px; display: none; }
-        .loading { background: #e2e3e5; color: #383d41; }
-        .success { background: #d4edda; color: #155724; }
+        :root {
+            --bg-color: #282c34;
+            --card-bg: #3c4048;
+            --text-color: #f8f8f2;
+            --accent-color: #61dafb;
+            --button-bg: #4CAF50;
+            --button-hover: #45a049;
+            --input-bg: #4a4f57;
+            --border-color: #555;
+            --progress-bg: #21252b;
+            --progress-fill: #61dafb;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .container {
+            background-color: var(--card-bg);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h2 {
+            color: var(--accent-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        p {
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 400;
+            color: var(--text-color);
+        }
+        input[type="file"],
+        input[type="number"],
+        select {
+            width: calc(100% - 24px); /* Padding adjust */
+            padding: 12px;
+            margin-top: 5px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        input[type="file"]::file-selector-button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 15px;
+            transition: background-color 0.3s ease;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #4fb2da;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            margin-top: 25px;
+            background: var(--button-bg);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease, transform 0.1s ease;
+        }
+        button:hover {
+            background: var(--button-hover);
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        #status-container {
+            margin-top: 30px;
+            padding: 20px;
+            background-color: var(--input-bg);
+            border-radius: 8px;
+            display: none; /* Hidden by default */
+            text-align: left;
+        }
+        #progress-bar-container {
+            width: 100%;
+            background-color: var(--progress-bg);
+            border-radius: 5px;
+            margin-top: 15px;
+            height: 25px;
+            overflow: hidden;
+            position: relative;
+        }
+        #progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--progress-fill);
+            border-radius: 5px;
+            text-align: center;
+            line-height: 25px;
+            color: var(--bg-color);
+            font-weight: 600;
+            transition: width 0.1s ease; /* Smoother animation */
+        }
+        #progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            line-height: 25px;
+            color: var(--bg-color);
+            font-weight: 600;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #current-status-message {
+            margin-top: 15px;
+            font-size: 0.9rem;
+            color: #a0a0a0;
+        }
+        #download-link {
+            display: block;
+            margin-top: 20px;
+            padding: 12px;
+            background-color: var(--accent-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            text-align: center;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+        }
+        #download-link:hover {
+            background-color: #4fb2da;
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>⚡ Fast CSV Splitter for UPPCL</h2>
-    <p>UPPCL Zindabad.</p>
+    <h2>🚀 CSV Splitter for UPPCL</h2>
+    <p>Apni badi CSV files ko chhote, Excel-friendly parts mein baantein! Sab kuch aapke browser mein! | Created by: Salman</p>
     
-    <label>CSV File Chunein:</label>
-    <input type="file" id="csvFile" accept=".csv">
+    <div class="form-group">
+        <label for="csvFile">CSV File Chunein:</label>
+        <input type="file" id="csvFile" accept=".csv">
+    </div>
 
-    <label>Todne ka tarika:</label>
-    <select id="splitMode">
-        <option value="rows">Rows ke hisab se (e.g. 999,999)</option>
-        <option value="parts">Barabar parts mein (e.g. 5 parts)</option>
-    </select>
+    <div class="form-group">
+        <label for="splitMode">Todne ka tarika:</label>
+        <select id="splitMode">
+            <option value="rows">Rows ke hisab se (e.g., 999,999 rows per file)</option>
+            <option value="parts">Barabar hisson mein (e.g., 5 equal parts)</option>
+        </select>
+    </div>
 
-    <label id="valueLabel">Rows ki sankhya:</label>
-    <input type="number" id="splitValue" value="999999">
+    <div class="form-group" id="splitValueContainer">
+        <label for="splitValue" id="valueLabel">Rows ki sankhya:</label>
+        <input type="number" id="splitValue" value="999999" min="1">
+    </div>
 
     <button onclick="processFile()">Split aur Download Karein</button>
     
-    <div id="status"></div>
+    <div id="status-container">
+        <div id="current-status-message">Taiyar...</div>
+        <div id="progress-bar-container">
+            <div id="progress-bar-fill"></div>
+            <span id="progress-text">0%</span>
+        </div>
+        <a id="download-link" style="display: none;">ZIP File Download Karein</a>
+    </div>
 </div>
 
 <script>
+    const csvFile = document.getElementById('csvFile');
     const splitMode = document.getElementById('splitMode');
+    const splitValueInput = document.getElementById('splitValue');
     const valueLabel = document.getElementById('valueLabel');
-    
+    const statusContainer = document.getElementById('status-container');
+    const progressBarFill = document.getElementById('progress-bar-fill');
+    const progressText = document.getElementById('progress-text');
+    const currentStatusMessage = document.getElementById('current-status-message');
+    const downloadLink = document.getElementById('download-link');
+
     splitMode.addEventListener('change', () => {
-        valueLabel.innerText = splitMode.value === 'rows' ? "Rows ki sankhya:" : "Kitne parts mein todna hai:";
+        if (splitMode.value === 'rows') {
+            valueLabel.innerText = "Har file mein kitni rows honi chahiye:";
+            splitValueInput.value = 999999;
+            splitValueInput.min = 1;
+        } else {
+            valueLabel.innerText = "Total kitne parts mein todna hai:";
+            splitValueInput.value = 5;
+            splitValueInput.min = 2;
+        }
     });
 
+    // Progress bar update function
+    function updateProgress(percentage, message) {
+        progressBarFill.style.width = percentage + '%';
+        progressText.innerText = Math.round(percentage) + '%';
+        currentStatusMessage.innerText = message;
+        statusContainer.style.display = 'block';
+    }
+
     async function processFile() {
-        const fileInput = document.getElementById('csvFile');
-        const status = document.getElementById('status');
-        const splitVal = parseInt(document.getElementById('splitValue').value);
-        
-        if (!fileInput.files.length) return alert("File chunein!");
+        if (!csvFile.files.length) {
+            alert("Kripya pehle CSV file chunein!");
+            return;
+        }
 
-        status.style.display = 'block';
-        status.className = 'loading';
-        status.innerText = "Processing... Data read kiya ja raha hai (Isme server ki zarurat nahi hai)";
+        updateProgress(0, "Processing shuru ho raha hai...");
+        downloadLink.style.display = 'none'; // Hide download link initially
 
-        const file = fileInput.files[0];
-        const fileName = file.name.replace(".csv", "");
+        const file = csvFile.files[0];
+        const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
         const zip = new JSZip();
         
         let headers = "";
-        let currentRows = [];
-        let fileCount = 1;
-        let totalProcessedRows = 0;
+        let currentRowsBuffer = [];
+        let fileCount = 0;
+        let totalRowsInFile = 0; // For accurate progress
+        let processedRowsCount = 0;
+        let finalChunkSize = parseInt(splitValueInput.value);
 
-        // Step 1: Agar 'parts' mode hai toh pehle total rows count karein
-        let finalChunkSize = splitVal;
-        if (splitMode.value === 'parts') {
-            status.innerText = "Total rows count ho rahi hain...";
-            const rowCount = await countRows(file);
-            finalChunkSize = Math.ceil(rowCount / splitVal);
-        }
-
-        // Step 2: Main Processing
-        Papa.parse(file, {
-            header: false,
-            skipEmptyLines: true,
-            chunk: function(results, parser) {
-                if (!headers) {
-                    headers = results.data[0].join(",") + "\n";
-                    results.data.shift();
-                }
-
-                currentRows.push(...results.data.map(row => row.join(",")));
-
-                if (currentRows.length >= finalChunkSize) {
-                    const content = headers + currentRows.slice(0, finalChunkSize).join("\n");
-                    zip.file(`${fileName}_part_${fileCount}.csv`, content);
-                    currentRows = currentRows.slice(finalChunkSize);
-                    fileCount++;
-                    status.innerText = `Part ${fileCount-1} taiyar...`;
-                }
-            },
-            complete: function() {
-                if (currentRows.length > 0) {
-                    zip.file(`${fileName}_part_${fileCount}.csv`, headers + currentRows.join("\n"));
-                }
-
-                status.innerText = "ZIP file ban rahi hai... thoda intezar karein.";
-                zip.generateAsync({type:"blob"}).then(function(content) {
-                    const link = document.createElement("a");
-                    link.href = URL.createObjectURL(content);
-                    link.download = `${fileName}_split.zip`;
-                    link.click();
-                    status.className = 'success';
-                    status.innerText = "Done! File download ho gayi.";
+        try {
+            // Step 1: Count total rows if splitting by parts OR for accurate progress
+            if (splitMode.value === 'parts' || true) { // Always count for progress
+                updateProgress(5, "Total rows count ki ja rahi hain... (Ye tez hoga)");
+                const countPromise = new Promise((resolve) => {
+                    Papa.parse(file, {
+                        header: false,
+                        skipEmptyLines: true,
+                        // This step is super fast as it only counts
+                        step: (row) => {
+                             if (row.data && row.data.length > 0 && row.data[0] !== "") {
+                                totalRowsInFile++;
+                            }
+                        },
+                        complete: () => {
+                             if (headers) totalRowsInFile--; // Subtract header row if present
+                             resolve();
+                        },
+                        error: (err) => { throw new Error("Row counting error: " + err.message); }
+                    });
                 });
+                await countPromise;
+                // Reset file reader for main parsing
+                csvFile.files[0] = new File([file], file.name, {type: file.type});
             }
-        });
-    }
 
-    function countRows(file) {
-        return new Promise((resolve) => {
-            let count = 0;
-            Papa.parse(file, {
-                step: () => count++,
-                complete: () => resolve(count - 1)
+            if (splitMode.value === 'parts') {
+                const numParts = parseInt(splitValueInput.value);
+                finalChunkSize = Math.ceil(totalRowsInFile / numParts);
+                currentStatusMessage.innerText = `File ko ${numParts} parts mein toda jayega. Har part mein ~${finalChunkSize} rows.`;
+            } else {
+                 currentStatusMessage.innerText = `Har part mein ${finalChunkSize} rows hongi.`;
+            }
+
+            // Step 2: Main Parsing and Zipping
+            const parsePromise = new Promise((resolve, reject) => {
+                Papa.parse(file, {
+                    header: false,
+                    skipEmptyLines: true,
+                    chunk: function(results, parser) {
+                        if (!headers && results.data.length > 0) {
+                            headers = results.data[0].join(",") + "\n";
+                            results.data.shift(); // Remove header from chunk
+                        }
+
+                        // Filter out empty rows from chunk
+                        const validRows = results.data.filter(row => row.length > 0 && row[0] !== "");
+                        currentRowsBuffer.push(...validRows.map(row => row.join(",")));
+                        
+                        processedRowsCount += validRows.length; // Count only valid rows
+                        
+                        // Update progress (excluding header row from percentage if counted)
+                        const percentage = Math.min(95, (processedRowsCount / totalRowsInFile) * 100);
+                        updateProgress(percentage, `Part ${fileCount + 1} taiyar ho raha hai...`);
+
+                        while (currentRowsBuffer.length >= finalChunkSize) {
+                            fileCount++;
+                            const content = headers + currentRowsBuffer.slice(0, finalChunkSize).join("\n");
+                            zip.file(`${fileNameWithoutExt}_part_${fileCount}.csv`, content);
+                            currentRowsBuffer = currentRowsBuffer.slice(finalChunkSize);
+                        }
+                    },
+                    complete: async function() {
+                        if (currentRowsBuffer.length > 0) {
+                            fileCount++;
+                            zip.file(`${fileNameWithoutExt}_part_${fileCount}.csv`, headers + currentRowsBuffer.join("\n"));
+                        }
+                        
+                        updateProgress(98, "ZIP file ban rahi hai... Kripya intezar karein.");
+                        const content = await zip.generateAsync({type:"blob"}, function update(metadata) {
+                            // Can add more detailed progress if needed during zip generation
+                            // console.log("Zip progress: " + metadata.percent + "%");
+                        });
+                        
+                        downloadLink.href = URL.createObjectURL(content);
+                        downloadLink.download = `${fileNameWithoutExt}_split.zip`;
+                        downloadLink.style.display = 'block';
+                        updateProgress(100, "Done! File download karne ke liye taiyar hai.");
+                        resolve();
+                    },
+                    error: function(err) {
+                        reject(new Error("Parsing error: " + err.message));
+                    }
+                });
             });
-        });
+            await parsePromise;
+
+        } catch (error) {
+            updateProgress(0, `Error: ${error.message}`);
+            console.error("CSV Processing Error:", error);
+            alert("File process karte waqt galti hui: " + error.message + ". Console check karein.");
+        }
     }
 </script>
 
