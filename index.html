@@ -3,352 +3,205 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV & Excel Splitter for UPPCL</title>
+    <title>Pro CSV Splitter - ABC</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            --glass-bg: rgba(255, 255, 255, 0.05);
-            --accent-cyan: #00f2fe;
-            --accent-blue: #4facfe;
-            --success-green: #00ff87;
-            --text-main: #e2e8f0;
+            --bg: #0f172a; --card: #1e293b; --accent: #38bdf8; --success: #22c55e; --text: #f1f5f9;
         }
-
         body {
-            font-family: 'Poppins', sans-serif;
-            background: var(--bg-gradient);
-            color: var(--text-main);
-            min-height: 100vh;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 20px;
+            font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text);
+            display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0;
         }
-
         .container {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 40px;
-            border-radius: 24px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            max-width: 750px;
-            width: 100%;
+            background: var(--card); padding: 40px; border-radius: 24px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5); width: 100%; max-width: 650px; border: 1px solid rgba(255,255,255,0.1);
         }
-
-        .header-section {
-            text-align: center;
-            margin-bottom: 30px;
+        .header { text-align: center; margin-bottom: 30px; }
+        .author-badge {
+            background: rgba(56, 189, 248, 0.1); color: var(--accent);
+            padding: 5px 15px; border-radius: 20px; font-family: 'JetBrains Mono'; font-size: 0.8rem;
+            border: 1px solid var(--accent); display: inline-block; margin-top: 10px;
         }
-
-        h1 {
-            font-weight: 600;
-            letter-spacing: -1px;
-            margin-bottom: 5px;
-            background: linear-gradient(to right, var(--accent-cyan), var(--accent-blue));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+        /* Stylish File Input */
+        .drop-zone {
+            border: 2px dashed #475569; border-radius: 16px; padding: 40px;
+            text-align: center; cursor: pointer; transition: 0.3s; background: rgba(255,255,255,0.02);
+            position: relative; margin-bottom: 20px;
         }
-
-        .author-chip {
-            display: inline-block;
-            background: rgba(0, 242, 254, 0.1);
-            border: 1px solid var(--accent-cyan);
-            color: var(--accent-cyan);
-            padding: 4px 16px;
-            border-radius: 50px;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            margin-bottom: 20px;
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
-        }
-
-        .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.2);
-            border-radius: 15px;
-            padding: 25px;
-            text-align: center;
-            transition: 0.3s;
-            background: rgba(255, 255, 255, 0.02);
-            margin-bottom: 20px;
-        }
-
-        .upload-area:hover { border-color: var(--accent-cyan); background: rgba(255, 255, 255, 0.05); }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-            display: none;
-        }
-
-        .stat-card {
-            background: rgba(0, 0, 0, 0.2);
-            padding: 15px;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .stat-card span { display: block; font-size: 1.2rem; font-weight: 600; color: var(--accent-cyan); }
-        .stat-card label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
-
-        .control-panel {
-            display: grid;
-            grid-template-columns: 1.5fr 1fr;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        label.input-label { font-size: 0.8rem; margin-bottom: 5px; display: block; color: #94a3b8; }
-
-        input, select {
-            width: 100%;
-            background: #0f172a;
-            border: 1px solid #334155;
-            padding: 12px;
-            border-radius: 10px;
-            color: white;
-            font-family: inherit;
-            box-sizing: border-box;
-        }
-
-        .btn-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
+        .drop-zone:hover, .drop-zone.active { border-color: var(--accent); background: rgba(56, 189, 248, 0.05); }
+        .drop-zone input { position: absolute; width: 100%; height: 100%; top: 0; left: 0; opacity: 0; cursor: pointer; }
+        .drop-zone p { margin: 0; font-weight: 500; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .input-box { background: #0f172a; border: 1px solid #334155; padding: 12px; border-radius: 10px; color: white; width: 100%; box-sizing: border-box; }
+        
         button {
-            padding: 16px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
+            width: 100%; padding: 15px; border-radius: 12px; border: none; font-weight: 600;
+            cursor: pointer; transition: 0.3s; font-size: 1rem;
         }
-
-        .btn-csv { background: #10b981; color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
-        .btn-excel { background: #3b82f6; color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3); }
-
-        button:hover { transform: translateY(-3px); opacity: 0.9; }
-
-        #progress-section { margin-top: 30px; display: none; }
-
-        .progress-wrapper {
-            background: #0f172a;
-            height: 12px;
-            border-radius: 10px;
-            overflow: hidden;
-            margin: 15px 0;
-        }
-
-        .progress-bar {
-            width: 0%;
-            height: 100%;
-            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
-            box-shadow: 0 0 15px var(--accent-cyan);
-            transition: 0.3s;
-        }
-
-        .table-container {
-            max-height: 200px;
-            overflow-y: auto;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            margin-top: 15px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85rem;
-        }
-
-        th { background: rgba(255, 255, 255, 0.05); padding: 12px; text-align: left; color: #94a3b8; }
-        td { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
-
-        .download-link {
-            display: none;
-            text-align: center;
-            margin-top: 20px;
-            background: var(--success-green);
-            color: #064e3b;
-            padding: 15px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-weight: 600;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.4); }
-            70% { box-shadow: 0 0 0 15px rgba(0, 255, 135, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
-        }
+        .btn-primary { background: var(--accent); color: #0f172a; margin-top: 10px; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(56, 189, 248, 0.4); }
+        
+        #process-area { display: none; margin-top: 30px; padding: 20px; background: rgba(0,0,0,0.2); border-radius: 15px; }
+        .progress-container { background: #334155; height: 10px; border-radius: 5px; margin: 15px 0; overflow: hidden; }
+        .progress-bar { width: 0%; height: 100%; background: var(--accent); transition: 0.3s; }
+        
+        .final-options { display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 20px; animation: slideUp 0.5s; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .csv-dl { background: #10b981; color: white; }
+        .xls-dl { background: #f59e0b; color: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <div class="header-section">
-        <h1>CSV Splitter for UPPCL</h1>
-        <div class="author-chip">Created by: Salman</div>
+    <div class="header">
+        <h1 style="margin:0; font-size:1.8rem;">🚀 Ultimate CSV Splitter</h1>
+        <div class="author-badge">Created by: ABC</div>
     </div>
 
-    <div class="upload-area">
-        <label class="input-label">Badi CSV file yahan select karein</label>
-        <input type="file" id="csvInput" accept=".csv" onchange="handleFile()">
+    <div class="drop-zone" id="dropZone">
+        <p id="file-name">Drag & Drop CSV file or Click to Browse</p>
+        <input type="file" id="csvFile" accept=".csv">
     </div>
 
-    <div id="statsArea" class="stats-grid">
-        <div class="stat-card"><label>Total Rows</label><span id="rowDisplay">0</span></div>
-        <div class="stat-card"><label>File Size</label><span id="sizeDisplay">0 MB</span></div>
+    <div id="file-info" style="display:none; text-align:center; margin-bottom:20px; font-size:0.9rem; color:var(--accent);">
+        Rows: <span id="info-rows">0</span> | Size: <span id="info-size">0 MB</span>
     </div>
 
-    <div class="control-panel">
+    <div class="grid">
         <div>
-            <label class="input-label">Split Mode</label>
-            <select id="modeSelect">
-                <option value="rows">Fixed Rows (Excel Limit: 999k)</option>
-                <option value="parts">Equal Parts (Barabar Hisson mein)</option>
+            <label style="font-size:0.8rem; color:#94a3b8;">Split Mode</label>
+            <select id="splitMode" class="input-box">
+                <option value="rows">Fixed Rows (Max 10Lakh)</option>
+                <option value="parts">Equal Parts</option>
             </select>
         </div>
         <div>
-            <label class="input-label">Value</label>
-            <input type="number" id="splitValue" value="999999">
+            <label style="font-size:0.8rem; color:#94a3b8;">Value</label>
+            <input type="number" id="splitValue" class="input-box" value="999999">
         </div>
     </div>
 
-    <div class="btn-group">
-        <button class="btn-csv" onclick="startProcess('csv')">⚡ Split to CSV</button>
-        <button class="btn-excel" onclick="startProcess('xlsx')">📊 Split to Excel</button>
-    </div>
+    <button class="btn-primary" onclick="startSplitting()">Process File</button>
 
-    <div id="progress-section">
-        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
-            <span id="statusTxt">Taiyar ho raha hai...</span>
-            <span id="percentTxt">0%</span>
-        </div>
-        <div class="progress-wrapper"><div id="mainBar" class="progress-bar"></div></div>
+    <div id="process-area">
+        <div id="status">Taiyar...</div>
+        <div class="progress-container"><div id="progressBar" class="progress-bar"></div></div>
         
-        <div class="table-container">
-            <table id="logTable">
-                <thead><tr><th>Part Name</th><th>Rows Count</th><th>Format</th></tr></thead>
-                <tbody id="logBody"></tbody>
-            </table>
+        <div id="finish-area" class="final-options">
+            <button class="csv-dl" onclick="downloadAll('csv')">Download as CSV ZIP</button>
+            <button class="xls-dl" onclick="downloadAll('xlsx')">Convert & Download Excel ZIP</button>
         </div>
-
-        <a id="finalDownload" class="download-link">📥 DOWNLOAD ALL PARTS (ZIP)</a>
     </div>
 </div>
 
 <script>
-    let activeFile = null;
-    let totalRowsCount = 0;
+    let rawFile = null;
+    let totalRows = 0;
+    let splitChunks = [];
+    let csvHeaders = "";
 
-    async function handleFile() {
-        activeFile = document.getElementById('csvInput').files[0];
-        if(!activeFile) return;
+    const fileInput = document.getElementById('csvFile');
+    const dropZone = document.getElementById('dropZone');
 
-        document.getElementById('statsArea').style.display = 'grid';
-        document.getElementById('sizeDisplay').innerText = (activeFile.size / (1024 * 1024)).toFixed(2) + " MB";
+    fileInput.onchange = (e) => handleFile(e.target.files[0]);
+    
+    function handleFile(file) {
+        if(!file) return;
+        rawFile = file;
+        document.getElementById('file-name').innerText = file.name;
+        document.getElementById('info-size').innerText = (file.size / (1024*1024)).toFixed(2) + " MB";
         
-        Papa.parse(activeFile, {
-            step: () => { totalRowsCount++; },
+        Papa.parse(file, {
+            step: () => { totalRows++; },
             complete: () => {
-                totalRowsCount--; // Header row
-                document.getElementById('rowDisplay').innerText = totalRowsCount.toLocaleString();
+                totalRows--; 
+                document.getElementById('file-info').style.display = 'block';
+                document.getElementById('info-rows').innerText = totalRows.toLocaleString();
             }
         });
     }
 
-    async function startProcess(fmt) {
-        if(!activeFile) return alert("Pehle file select karein!");
+    async function startSplitting() {
+        if(!rawFile) return alert("Pehle file select karein!");
         
-        const mode = document.getElementById('modeSelect').value;
+        const mode = document.getElementById('splitMode').value;
         const val = parseInt(document.getElementById('splitValue').value);
-        const zip = new JSZip();
+        let chunkSize = mode === 'rows' ? val : Math.ceil(totalRows / val);
+
+        document.getElementById('process-area').style.display = 'block';
+        document.getElementById('finish-area').style.display = 'none';
         
-        document.getElementById('progress-section').style.display = 'block';
-        document.getElementById('logBody').innerHTML = "";
-        document.getElementById('finalDownload').style.display = 'none';
-
-        let chunkSize = mode === 'rows' ? val : Math.ceil(totalRowsCount / val);
-        let headerData = null;
+        splitChunks = [];
         let buffer = [];
-        let fileIndex = 0;
-        let processedTotal = 0;
+        let processed = 0;
 
-        Papa.parse(activeFile, {
+        Papa.parse(rawFile, {
             header: false,
-            chunk: async (results, parser) => {
-                parser.pause();
-                
-                if(!headerData) {
-                    headerData = results.data[0];
+            chunk: (results) => {
+                if(!csvHeaders) {
+                    csvHeaders = results.data[0];
                     results.data.shift();
                 }
-
                 buffer.push(...results.data);
-                processedTotal += results.data.length;
-
-                // UI Update
-                let p = Math.round((processedTotal / totalRowsCount) * 100);
-                document.getElementById('mainBar').style.width = p + "%";
-                document.getElementById('percentTxt').innerText = p + "%";
-                document.getElementById('statusTxt').innerText = `Part ${fileIndex+1} process ho raha hai...`;
+                processed += results.data.length;
+                
+                let p = (processed / totalRows) * 100;
+                document.getElementById('progressBar').style.width = p + "%";
+                document.getElementById('status').innerText = `Splitting: ${Math.round(p)}%`;
 
                 while(buffer.length >= chunkSize) {
-                    fileIndex++;
-                    await createPart(zip, buffer.splice(0, chunkSize), headerData, fileIndex, fmt);
+                    splitChunks.push(buffer.splice(0, chunkSize));
                 }
-                parser.resume();
             },
-            complete: async () => {
-                if(buffer.length > 0) {
-                    fileIndex++;
-                    await createPart(zip, buffer, headerData, fileIndex, fmt);
-                }
-                
-                document.getElementById('statusTxt').innerText = "ZIP generate ho rahi hai...";
-                const content = await zip.generateAsync({type:"blob"});
-                const dl = document.getElementById('finalDownload');
-                dl.href = URL.createObjectURL(content);
-                dl.download = `ABC_Splitter_${activeFile.name.split('.')[0]}.zip`;
-                dl.style.display = 'block';
-                document.getElementById('statusTxt').innerText = "Kaam Pura Ho Gaya!";
+            complete: () => {
+                if(buffer.length > 0) splitChunks.push(buffer);
+                document.getElementById('status').innerText = "Splitting Complete! Format chunein:";
+                document.getElementById('finish-area').style.display = 'grid';
             }
         });
     }
 
-    async function createPart(zip, data, head, idx, fmt) {
-        const name = `Part_${idx}.${fmt}`;
-        let blob;
+    async function downloadAll(format) {
+        const zip = new JSZip();
+        const status = document.getElementById('status');
+        const progressBar = document.getElementById('progressBar');
+        
+        for(let i=0; i < splitChunks.length; i++) {
+            let p = ((i+1) / splitChunks.length) * 100;
+            status.innerText = `Converting Part ${i+1} to ${format.toUpperCase()}...`;
+            progressBar.style.width = p + "%";
 
-        if(fmt === 'csv') {
-            blob = Papa.unparse({ fields: head, data: data });
-        } else {
-            const ws = XLSX.utils.aoa_to_sheet([head, ...data]);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-            const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
-            blob = new Blob([buf]);
+            let content;
+            if(format === 'csv') {
+                content = Papa.unparse({ fields: csvHeaders, data: splitChunks[i] });
+            } else {
+                // Excel optimization: sheet per part
+                const ws = XLSX.utils.aoa_to_sheet([csvHeaders, ...splitChunks[i]]);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Data");
+                const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+                content = new Blob([buf]);
+            }
+            zip.file(`Part_${i+1}.${format}`, content);
+            
+            // Allow browser to breathe
+            await new Promise(r => setTimeout(r, 100));
         }
 
-        zip.file(name, blob);
-        const row = document.getElementById('logBody').insertRow();
-        row.innerHTML = `<td>${name}</td><td>${data.length.toLocaleString()}</td><td>${fmt.toUpperCase()}</td>`;
+        status.innerText = "Generating ZIP... please wait.";
+        const zipBlob = await zip.generateAsync({type:"blob"});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(zipBlob);
+        link.download = `ABC_Split_${format.toUpperCase()}.zip`;
+        link.click();
+        status.innerText = "Download Started!";
     }
 </script>
 
