@@ -257,7 +257,7 @@
         try {
             // Step 1: Count total rows if splitting by parts OR for accurate progress
             if (splitMode.value === 'parts' || true) { // Always count for progress
-                updateProgress(5, "Total rows count ki ja rahi hain... (Ye tez hoga)");
+                updateProgress(5, "Total rows count ki ja rahi hain... (wait karein)");
                 const countPromise = new Promise((resolve) => {
                     Papa.parse(file, {
                         header: false,
