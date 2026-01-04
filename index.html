@@ -3,368 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSV Splitter for UPPCL</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <title>CSV & Excel Splitter for UPPCL</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg-color: #282c34;
-            --card-bg: #3c4048;
-            --text-color: #f8f8f2;
-            --accent-color: #61dafb;
-            --button-bg: #4CAF50;
-            --button-hover: #45a049;
-            --input-bg: #4a4f57;
-            --border-color: #555;
-            --progress-bg: #21252b;
-            --progress-fill: #61dafb;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --glass-bg: rgba(255, 255, 255, 0.05);
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --success-green: #00ff87;
+            --text-main: #e2e8f0;
         }
+
         body {
             font-family: 'Poppins', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
             padding: 20px;
-            box-sizing: border-box;
         }
+
         .container {
-            background-color: var(--card-bg);
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-            max-width: 600px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            max-width: 750px;
             width: 100%;
+        }
+
+        .header-section {
             text-align: center;
-        }
-        h2 {
-            color: var(--accent-color);
-            margin-bottom: 10px;
-            font-weight: 600;
-        }
-        p {
-            color: #ccc;
             margin-bottom: 30px;
         }
-        .form-group {
-            text-align: left;
+
+        h1 {
+            font-weight: 600;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, var(--accent-cyan), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .author-chip {
+            display: inline-block;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 4px 16px;
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+        }
+
+        .upload-area {
+            border: 2px dashed rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: 0.3s;
+            background: rgba(255, 255, 255, 0.02);
             margin-bottom: 20px;
         }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 400;
-            color: var(--text-color);
+
+        .upload-area:hover { border-color: var(--accent-cyan); background: rgba(255, 255, 255, 0.05); }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+            display: none;
         }
-        input[type="file"],
-        input[type="number"],
-        select {
-            width: calc(100% - 24px); /* Padding adjust */
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-card span { display: block; font-size: 1.2rem; font-weight: 600; color: var(--accent-cyan); }
+        .stat-card label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+
+        .control-panel {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        label.input-label { font-size: 0.8rem; margin-bottom: 5px; display: block; color: #94a3b8; }
+
+        input, select {
+            width: 100%;
+            background: #0f172a;
+            border: 1px solid #334155;
             padding: 12px;
-            margin-top: 5px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            background-color: var(--input-bg);
-            color: var(--text-color);
-            font-size: 1rem;
+            border-radius: 10px;
+            color: white;
+            font-family: inherit;
             box-sizing: border-box;
         }
-        input[type="file"]::file-selector-button {
-            background-color: var(--accent-color);
-            color: white;
-            border: none;
-            padding: 8px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 15px;
-            transition: background-color 0.3s ease;
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
         }
-        input[type="file"]::file-selector-button:hover {
-            background-color: #4fb2da;
-        }
+
         button {
-            width: 100%;
-            padding: 15px;
-            margin-top: 25px;
-            background: var(--button-bg);
-            color: white;
+            padding: 16px;
             border: none;
-            border-radius: 6px;
+            border-radius: 12px;
+            font-weight: 600;
             cursor: pointer;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: background-color 0.3s ease, transform 0.1s ease;
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-        button:hover {
-            background: var(--button-hover);
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        #status-container {
-            margin-top: 30px;
-            padding: 20px;
-            background-color: var(--input-bg);
-            border-radius: 8px;
-            display: none; /* Hidden by default */
-            text-align: left;
-        }
-        #progress-bar-container {
-            width: 100%;
-            background-color: var(--progress-bg);
-            border-radius: 5px;
-            margin-top: 15px;
-            height: 25px;
+
+        .btn-csv { background: #10b981; color: white; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3); }
+        .btn-excel { background: #3b82f6; color: white; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3); }
+
+        button:hover { transform: translateY(-3px); opacity: 0.9; }
+
+        #progress-section { margin-top: 30px; display: none; }
+
+        .progress-wrapper {
+            background: #0f172a;
+            height: 12px;
+            border-radius: 10px;
             overflow: hidden;
-            position: relative;
+            margin: 15px 0;
         }
-        #progress-bar-fill {
-            height: 100%;
+
+        .progress-bar {
             width: 0%;
-            background-color: var(--progress-fill);
-            border-radius: 5px;
-            text-align: center;
-            line-height: 25px;
-            color: var(--bg-color);
-            font-weight: 600;
-            transition: width 0.1s ease; /* Smoother animation */
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue));
+            box-shadow: 0 0 15px var(--accent-cyan);
+            transition: 0.3s;
         }
-        #progress-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            line-height: 25px;
-            color: var(--bg-color);
-            font-weight: 600;
-            top: 0;
-            left: 0;
-            z-index: 1;
-        }
-        #current-status-message {
+
+        .table-container {
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
             margin-top: 15px;
-            font-size: 0.9rem;
-            color: #a0a0a0;
         }
-        #download-link {
-            display: block;
-            margin-top: 20px;
-            padding: 12px;
-            background-color: var(--accent-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th { background: rgba(255, 255, 255, 0.05); padding: 12px; text-align: left; color: #94a3b8; }
+        td { padding: 12px; border-top: 1px solid rgba(255, 255, 255, 0.05); }
+
+        .download-link {
+            display: none;
             text-align: center;
+            margin-top: 20px;
+            background: var(--success-green);
+            color: #064e3b;
+            padding: 15px;
+            border-radius: 12px;
+            text-decoration: none;
             font-weight: 600;
-            transition: background-color 0.3s ease;
+            animation: pulse 2s infinite;
         }
-        #download-link:hover {
-            background-color: #4fb2da;
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(0, 255, 135, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 135, 0); }
         }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🚀 CSV Splitter for UPPCL</h2>
-
-<p style="margin-bottom: 10px;">
-    Apni badi CSV files ko chhote, Excel-friendly parts mein baantein! Sab kuch aapke browser mein!
-</p>
-
-<div style="margin-top: 5px;">
-    <span style="
-        background-color: #e3f2fd; 
-        color: #0d47a1; 
-        padding: 8px 16px; 
-        border-radius: 50px; 
-        font-family: sans-serif; 
-        font-size: 16px; 
-        font-weight: 500; 
-        display: inline-block;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        border: 1px solid #bbdefb;">
-        Created by: <strong>Salman</strong>
-    </span>
-</div>
-    
-    <div class="form-group">
-        <label for="csvFile">CSV File Chunein:</label>
-        <input type="file" id="csvFile" accept=".csv">
+    <div class="header-section">
+        <h1>CSV Splitter for UPPCL</h1>
+        <div class="author-chip">Created by: Salman</div>
     </div>
 
-    <div class="form-group">
-        <label for="splitMode">Todne ka tarika:</label>
-        <select id="splitMode">
-            <option value="rows">Rows ke hisab se (e.g., 999,999 rows per file)</option>
-            <option value="parts">Barabar hisson mein (e.g., 5 equal parts)</option>
-        </select>
+    <div class="upload-area">
+        <label class="input-label">Badi CSV file yahan select karein</label>
+        <input type="file" id="csvInput" accept=".csv" onchange="handleFile()">
     </div>
 
-    <div class="form-group" id="splitValueContainer">
-        <label for="splitValue" id="valueLabel">Rows ki sankhya:</label>
-        <input type="number" id="splitValue" value="999999" min="1">
+    <div id="statsArea" class="stats-grid">
+        <div class="stat-card"><label>Total Rows</label><span id="rowDisplay">0</span></div>
+        <div class="stat-card"><label>File Size</label><span id="sizeDisplay">0 MB</span></div>
     </div>
 
-    <button onclick="processFile()">Split aur Download Karein</button>
-    
-    <div id="status-container">
-        <div id="current-status-message">Taiyar...</div>
-        <div id="progress-bar-container">
-            <div id="progress-bar-fill"></div>
-            <span id="progress-text">0%</span>
+    <div class="control-panel">
+        <div>
+            <label class="input-label">Split Mode</label>
+            <select id="modeSelect">
+                <option value="rows">Fixed Rows (Excel Limit: 999k)</option>
+                <option value="parts">Equal Parts (Barabar Hisson mein)</option>
+            </select>
         </div>
-        <a id="download-link" style="display: none;">ZIP File Download Karein</a>
+        <div>
+            <label class="input-label">Value</label>
+            <input type="number" id="splitValue" value="999999">
+        </div>
+    </div>
+
+    <div class="btn-group">
+        <button class="btn-csv" onclick="startProcess('csv')">⚡ Split to CSV</button>
+        <button class="btn-excel" onclick="startProcess('xlsx')">📊 Split to Excel</button>
+    </div>
+
+    <div id="progress-section">
+        <div style="display: flex; justify-content: space-between; font-size: 0.8rem;">
+            <span id="statusTxt">Taiyar ho raha hai...</span>
+            <span id="percentTxt">0%</span>
+        </div>
+        <div class="progress-wrapper"><div id="mainBar" class="progress-bar"></div></div>
+        
+        <div class="table-container">
+            <table id="logTable">
+                <thead><tr><th>Part Name</th><th>Rows Count</th><th>Format</th></tr></thead>
+                <tbody id="logBody"></tbody>
+            </table>
+        </div>
+
+        <a id="finalDownload" class="download-link">📥 DOWNLOAD ALL PARTS (ZIP)</a>
     </div>
 </div>
 
 <script>
-    const csvFile = document.getElementById('csvFile');
-    const splitMode = document.getElementById('splitMode');
-    const splitValueInput = document.getElementById('splitValue');
-    const valueLabel = document.getElementById('valueLabel');
-    const statusContainer = document.getElementById('status-container');
-    const progressBarFill = document.getElementById('progress-bar-fill');
-    const progressText = document.getElementById('progress-text');
-    const currentStatusMessage = document.getElementById('current-status-message');
-    const downloadLink = document.getElementById('download-link');
+    let activeFile = null;
+    let totalRowsCount = 0;
 
-    splitMode.addEventListener('change', () => {
-        if (splitMode.value === 'rows') {
-            valueLabel.innerText = "Har file mein kitni rows honi chahiye:";
-            splitValueInput.value = 999999;
-            splitValueInput.min = 1;
-        } else {
-            valueLabel.innerText = "Total kitne parts mein todna hai:";
-            splitValueInput.value = 5;
-            splitValueInput.min = 2;
-        }
-    });
+    async function handleFile() {
+        activeFile = document.getElementById('csvInput').files[0];
+        if(!activeFile) return;
 
-    // Progress bar update function
-    function updateProgress(percentage, message) {
-        progressBarFill.style.width = percentage + '%';
-        progressText.innerText = Math.round(percentage) + '%';
-        currentStatusMessage.innerText = message;
-        statusContainer.style.display = 'block';
+        document.getElementById('statsArea').style.display = 'grid';
+        document.getElementById('sizeDisplay').innerText = (activeFile.size / (1024 * 1024)).toFixed(2) + " MB";
+        
+        Papa.parse(activeFile, {
+            step: () => { totalRowsCount++; },
+            complete: () => {
+                totalRowsCount--; // Header row
+                document.getElementById('rowDisplay').innerText = totalRowsCount.toLocaleString();
+            }
+        });
     }
 
-    async function processFile() {
-        if (!csvFile.files.length) {
-            alert("Kripya pehle CSV file chunein!");
-            return;
-        }
-
-        updateProgress(0, "Processing shuru ho raha hai...");
-        downloadLink.style.display = 'none'; // Hide download link initially
-
-        const file = csvFile.files[0];
-        const fileNameWithoutExt = file.name.replace(/\.[^/.]+$/, ""); // Remove extension
+    async function startProcess(fmt) {
+        if(!activeFile) return alert("Pehle file select karein!");
+        
+        const mode = document.getElementById('modeSelect').value;
+        const val = parseInt(document.getElementById('splitValue').value);
         const zip = new JSZip();
         
-        let headers = "";
-        let currentRowsBuffer = [];
-        let fileCount = 0;
-        let totalRowsInFile = 0; // For accurate progress
-        let processedRowsCount = 0;
-        let finalChunkSize = parseInt(splitValueInput.value);
+        document.getElementById('progress-section').style.display = 'block';
+        document.getElementById('logBody').innerHTML = "";
+        document.getElementById('finalDownload').style.display = 'none';
 
-        try {
-            // Step 1: Count total rows if splitting by parts OR for accurate progress
-            if (splitMode.value === 'parts' || true) { // Always count for progress
-                updateProgress(5, "Total rows count ki ja rahi hain... (wait karein)");
-                const countPromise = new Promise((resolve) => {
-                    Papa.parse(file, {
-                        header: false,
-                        skipEmptyLines: true,
-                        // This step is super fast as it only counts
-                        step: (row) => {
-                             if (row.data && row.data.length > 0 && row.data[0] !== "") {
-                                totalRowsInFile++;
-                            }
-                        },
-                        complete: () => {
-                             if (headers) totalRowsInFile--; // Subtract header row if present
-                             resolve();
-                        },
-                        error: (err) => { throw new Error("Row counting error: " + err.message); }
-                    });
-                });
-                await countPromise;
-                // Reset file reader for main parsing
-                csvFile.files[0] = new File([file], file.name, {type: file.type});
+        let chunkSize = mode === 'rows' ? val : Math.ceil(totalRowsCount / val);
+        let headerData = null;
+        let buffer = [];
+        let fileIndex = 0;
+        let processedTotal = 0;
+
+        Papa.parse(activeFile, {
+            header: false,
+            chunk: async (results, parser) => {
+                parser.pause();
+                
+                if(!headerData) {
+                    headerData = results.data[0];
+                    results.data.shift();
+                }
+
+                buffer.push(...results.data);
+                processedTotal += results.data.length;
+
+                // UI Update
+                let p = Math.round((processedTotal / totalRowsCount) * 100);
+                document.getElementById('mainBar').style.width = p + "%";
+                document.getElementById('percentTxt').innerText = p + "%";
+                document.getElementById('statusTxt').innerText = `Part ${fileIndex+1} process ho raha hai...`;
+
+                while(buffer.length >= chunkSize) {
+                    fileIndex++;
+                    await createPart(zip, buffer.splice(0, chunkSize), headerData, fileIndex, fmt);
+                }
+                parser.resume();
+            },
+            complete: async () => {
+                if(buffer.length > 0) {
+                    fileIndex++;
+                    await createPart(zip, buffer, headerData, fileIndex, fmt);
+                }
+                
+                document.getElementById('statusTxt').innerText = "ZIP generate ho rahi hai...";
+                const content = await zip.generateAsync({type:"blob"});
+                const dl = document.getElementById('finalDownload');
+                dl.href = URL.createObjectURL(content);
+                dl.download = `ABC_Splitter_${activeFile.name.split('.')[0]}.zip`;
+                dl.style.display = 'block';
+                document.getElementById('statusTxt').innerText = "Kaam Pura Ho Gaya!";
             }
+        });
+    }
 
-            if (splitMode.value === 'parts') {
-                const numParts = parseInt(splitValueInput.value);
-                finalChunkSize = Math.ceil(totalRowsInFile / numParts);
-                currentStatusMessage.innerText = `File ko ${numParts} parts mein toda jayega. Har part mein ~${finalChunkSize} rows.`;
-            } else {
-                 currentStatusMessage.innerText = `Har part mein ${finalChunkSize} rows hongi.`;
-            }
+    async function createPart(zip, data, head, idx, fmt) {
+        const name = `Part_${idx}.${fmt}`;
+        let blob;
 
-            // Step 2: Main Parsing and Zipping
-            const parsePromise = new Promise((resolve, reject) => {
-                Papa.parse(file, {
-                    header: false,
-                    skipEmptyLines: true,
-                    chunk: function(results, parser) {
-                        if (!headers && results.data.length > 0) {
-                            headers = results.data[0].join(",") + "\n";
-                            results.data.shift(); // Remove header from chunk
-                        }
-
-                        // Filter out empty rows from chunk
-                        const validRows = results.data.filter(row => row.length > 0 && row[0] !== "");
-                        currentRowsBuffer.push(...validRows.map(row => row.join(",")));
-                        
-                        processedRowsCount += validRows.length; // Count only valid rows
-                        
-                        // Update progress (excluding header row from percentage if counted)
-                        const percentage = Math.min(95, (processedRowsCount / totalRowsInFile) * 100);
-                        updateProgress(percentage, `Part ${fileCount + 1} taiyar ho raha hai...`);
-
-                        while (currentRowsBuffer.length >= finalChunkSize) {
-                            fileCount++;
-                            const content = headers + currentRowsBuffer.slice(0, finalChunkSize).join("\n");
-                            zip.file(`${fileNameWithoutExt}_part_${fileCount}.csv`, content);
-                            currentRowsBuffer = currentRowsBuffer.slice(finalChunkSize);
-                        }
-                    },
-                    complete: async function() {
-                        if (currentRowsBuffer.length > 0) {
-                            fileCount++;
-                            zip.file(`${fileNameWithoutExt}_part_${fileCount}.csv`, headers + currentRowsBuffer.join("\n"));
-                        }
-                        
-                        updateProgress(98, "ZIP file ban rahi hai... Kripya intezar karein.");
-                        const content = await zip.generateAsync({type:"blob"}, function update(metadata) {
-                            // Can add more detailed progress if needed during zip generation
-                            // console.log("Zip progress: " + metadata.percent + "%");
-                        });
-                        
-                        downloadLink.href = URL.createObjectURL(content);
-                        downloadLink.download = `${fileNameWithoutExt}_split.zip`;
-                        downloadLink.style.display = 'block';
-                        updateProgress(100, "Done! File download karne ke liye taiyar hai.");
-                        resolve();
-                    },
-                    error: function(err) {
-                        reject(new Error("Parsing error: " + err.message));
-                    }
-                });
-            });
-            await parsePromise;
-
-        } catch (error) {
-            updateProgress(0, `Error: ${error.message}`);
-            console.error("CSV Processing Error:", error);
-            alert("File process karte waqt galti hui: " + error.message + ". Console check karein.");
+        if(fmt === 'csv') {
+            blob = Papa.unparse({ fields: head, data: data });
+        } else {
+            const ws = XLSX.utils.aoa_to_sheet([head, ...data]);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+            const buf = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+            blob = new Blob([buf]);
         }
+
+        zip.file(name, blob);
+        const row = document.getElementById('logBody').insertRow();
+        row.innerHTML = `<td>${name}</td><td>${data.length.toLocaleString()}</td><td>${fmt.toUpperCase()}</td>`;
     }
 </script>
 
